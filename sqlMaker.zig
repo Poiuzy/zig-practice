@@ -1,4 +1,18 @@
 const std = @import("std");
+const c = @cImport(@cInclude("sqlite3.h"));
+
+fn tableManeger(comptime _dataType: type) type {
+    return struct {
+        const Self = @This();
+        const dataType: type = _dataType;
+        const tableName: []const u8 = @typeName(_dataType);
+        const createSql = sqlCreate(_dataType);
+
+        fn create(pdb: ?*c.sqlite3) c_int {
+            return c.sqlite3_exec(pdb, @ptrCast(Self.createSql), null, null, null);
+        }
+    };
+}
 
 fn typeSql(comptime t: type) []const u8 {
     comptime var result: []const u8 = undefined;
@@ -69,7 +83,9 @@ fn sqlInsert(comptime s: type) []const u8 {
 const ts = struct { a: u8, b: []const u8 };
 
 pub fn main() !void {
-    std.debug.print("{s}\n", .{sqlCreate(ts)});
-    std.debug.print("{s}\n", .{sqlDrop(ts)});
-    std.debug.print("{s}\n", .{sqlInsert(ts)});
+    const s = tableManeger(ts);
+    var pdb: ?*c.sqlite3 = undefined;
+    _ = c.sqlite3_open("test.sqlite3", &pdb);
+    _ = s.create(pdb);
+    _ = c.sqlite3_close(pdb);
 }
