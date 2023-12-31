@@ -1,5 +1,4 @@
 const std = @import("std");
-const t2 = @import("test2.zig");
 
 fn typeSql(comptime t: type) []const u8 {
     comptime var result: []const u8 = undefined;
